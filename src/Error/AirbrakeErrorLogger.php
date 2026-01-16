@@ -180,9 +180,42 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
     {
         $uri = $request->getUri();
 
+        // Context fields as per Airbrake API v3
         $notice['context']['url'] = (string)$uri;
         $notice['context']['httpMethod'] = $request->getMethod();
         $notice['context']['userAgent'] = $request->getHeaderLine('User-Agent');
+
+        // Add route if available (CakePHP specific)
+        $routeParams = $request->getAttribute('params', []);
+        if (!empty($routeParams)) {
+            $route = '';
+            if (!empty($routeParams['prefix'])) {
+                $route .= '/' . $routeParams['prefix'];
+            }
+            if (!empty($routeParams['controller'])) {
+                $route .= '/' . $routeParams['controller'];
+            }
+            if (!empty($routeParams['action'])) {
+                $route .= '/' . $routeParams['action'];
+            }
+            if ($route) {
+                $notice['context']['route'] = $route;
+            }
+
+            // Set component and action for better grouping in Airbrake
+            if (!empty($routeParams['controller'])) {
+                $notice['context']['component'] = $routeParams['controller'];
+            }
+            if (!empty($routeParams['action'])) {
+                $notice['context']['action'] = $routeParams['action'];
+            }
+        }
+
+        // Add user IP address
+        $clientIp = $request->clientIp ?? $request->getServerParams()['REMOTE_ADDR'] ?? null;
+        if ($clientIp) {
+            $notice['context']['userAddr'] = $clientIp;
+        }
 
         // Add request parameters (filtered)
         $notice['params'] = array_merge(
@@ -190,6 +223,18 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
             [
                 'query' => $request->getQueryParams(),
             ]
+        );
+
+        // Add environment variables (server params subset)
+        $serverParams = $request->getServerParams();
+        $notice['environment'] = array_merge(
+            $notice['environment'] ?? [],
+            array_filter([
+                'REQUEST_METHOD' => $serverParams['REQUEST_METHOD'] ?? null,
+                'REQUEST_URI' => $serverParams['REQUEST_URI'] ?? null,
+                'SERVER_NAME' => $serverParams['SERVER_NAME'] ?? null,
+                'HTTP_HOST' => $serverParams['HTTP_HOST'] ?? null,
+            ])
         );
 
         // Add session data if available
@@ -202,12 +247,26 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
             $notice['session'] = $sessionData;
         }
 
-        // Add user context if available
+        // Add user context if available (CakePHP Authentication plugin)
         $identity = $request->getAttribute('identity');
         if ($identity !== null) {
-            $notice['context']['user'] = [
+            $userData = [
                 'id' => $identity->getIdentifier() ?? null,
             ];
+
+            // Try to get additional user info if available
+            if (method_exists($identity, 'get')) {
+                $name = $identity->get('name') ?? $identity->get('username') ?? null;
+                $email = $identity->get('email') ?? null;
+                if ($name) {
+                    $userData['name'] = $name;
+                }
+                if ($email) {
+                    $userData['email'] = $email;
+                }
+            }
+
+            $notice['context']['user'] = $userData;
         }
 
         return $notice;

@@ -11,8 +11,9 @@ A CakePHP 5.x plugin for [Airbrake](https://airbrake.io/) error tracking and exc
 - Automatic exception and error tracking
 - Seamless integration with CakePHP's error handling system
 - Log engine for sending log messages to Airbrake
-- Request context (URL, HTTP method, user agent, etc.)
-- User identification support
+- Monolog handler for Monolog integration
+- Request context (URL, HTTP method, route, user agent, etc.)
+- User identification support (CakePHP Authentication plugin)
 - Sensitive data filtering (passwords, tokens, etc.)
 - Support for self-hosted Airbrake (Errbit)
 - Environment-based configuration
@@ -149,6 +150,21 @@ Log::error('Something went wrong', ['scope' => 'airbrake']);
 Log::critical('Database connection failed');
 ```
 
+### Monolog Integration
+
+If you're using Monolog, you can use the provided handler:
+
+```php
+use Monolog\Logger;
+use Airbrake\Log\Engine\MonologHandler;
+
+$log = new Logger('app');
+$log->pushHandler(new MonologHandler());
+
+$log->error('Something went wrong', ['user_id' => 123]);
+$log->critical('Database connection failed', ['exception' => $e]);
+```
+
 ### Adding Custom Context
 
 You can add custom context to your error reports using filters:
@@ -164,6 +180,17 @@ $notifier->addFilter(function ($notice) {
     $notice['params']['orderId'] = 12345;
     return $notice;
 });
+```
+
+### Setting Severity
+
+You can set the severity level for notices:
+
+```php
+$notifier = new Notifier(Configure::read('Airbrake'));
+$notice = $notifier->buildNotice($exception);
+$notice['context']['severity'] = 'critical'; // debug, info, notice, warning, error, critical, alert, emergency
+$notifier->sendNotice($notice);
 ```
 
 ## Configuration Options
