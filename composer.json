@@ -1,0 +1,52 @@
+{
+    "name": "salines/cakephp-airbrake",
+    "description": "CakePHP 5.x plugin for Airbrake error tracking and exception monitoring",
+    "type": "cakephp-plugin",
+    "license": "MIT",
+    "keywords": [
+        "cakephp",
+        "airbrake",
+        "error-tracking",
+        "exception-handling",
+        "error-monitoring",
+        "php"
+    ],
+    "homepage": "https://github.com/salines/cakephp-airbrake",
+    "authors": [
+        {
+            "name": "Salines",
+            "homepage": "https://github.com/salines"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/salines/cakephp-airbrake/issues",
+        "source": "https://github.com/salines/cakephp-airbrake"
+    },
+    "require": {
+        "php": ">=8.1",
+        "cakephp/cakephp": "^5.0",
+        "airbrake/phpbrake": "^0.9"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.1",
+        "cakephp/cakephp-codesniffer": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Airbrake\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Airbrake\\Test\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
