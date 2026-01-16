@@ -64,7 +64,8 @@ class AirbrakePlugin extends BasePlugin
      *
      * Loads plugin configuration and sets up the error logger.
      *
-     * @param \Cake\Core\PluginApplicationInterface $app The application instance.
+     * @template TApp of \Cake\Http\BaseApplication
+     * @param \Cake\Core\PluginApplicationInterface<TApp> $app The application instance.
      * @return void
      */
     public function bootstrap(PluginApplicationInterface $app): void

@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace Airbrake;
 
-use Cake\Core\Configure;
 use Cake\Http\Client;
 use Cake\Http\Client\Response;
+use InvalidArgumentException;
 use Throwable;
+use function Cake\I18n\__d;
 
 /**
  * Airbrake Notifier
@@ -86,8 +87,8 @@ class Notifier
         $this->config = array_merge($defaultConfig, $config);
 
         if (empty($this->config['projectId']) || empty($this->config['projectKey'])) {
-            throw new \InvalidArgumentException(
-                'Airbrake: projectId and projectKey are required configuration options.'
+            throw new InvalidArgumentException(
+                __d('airbrake', 'Airbrake: projectId and projectKey are required configuration options.'),
             );
         }
 
@@ -106,7 +107,7 @@ class Notifier
      * @param callable $filter Filter callback.
      * @return $this
      */
-    public function addFilter(callable $filter): static
+    public function addFilter(callable $filter)
     {
         $this->filters[] = $filter;
 
@@ -153,26 +154,30 @@ class Notifier
     public function sendNotice(array $notice): array
     {
         if (!$this->isEnabled()) {
-            $notice['error'] = 'Airbrake: notifications are disabled';
+            $notice['error'] = __d('airbrake', 'Airbrake: notifications are disabled');
+
             return $notice;
         }
 
         if (time() < $this->rateLimitReset) {
-            $notice['error'] = 'Airbrake: IP is rate limited';
+            $notice['error'] = __d('airbrake', 'Airbrake: IP is rate limited');
+
             return $notice;
         }
 
         // Apply filters
         $notice = $this->applyFilters($notice);
         if ($notice === null || isset($notice['error'])) {
-            return $notice ?? ['error' => 'Airbrake: notice was filtered'];
+            return $notice ?? ['error' => __d('airbrake', 'Airbrake: notice was filtered')];
         }
 
         try {
             $response = $this->sendRequest($notice);
+
             return $this->processResponse($notice, $response);
         } catch (Throwable $e) {
-            $notice['error'] = 'Airbrake: ' . $e->getMessage();
+            $notice['error'] = __d('airbrake', 'Airbrake: {0}', $e->getMessage());
+
             return $notice;
         }
     }
@@ -408,6 +413,11 @@ class Notifier
      */
     protected function buildNoticesUrl(): string
     {
+        // Allow custom URL override for testing (e.g., webhook.site)
+        if (!empty($this->config['customNoticesUrl'])) {
+            return $this->config['customNoticesUrl'];
+        }
+
         $host = rtrim($this->config['host'], '/');
         if (!preg_match('~^https?://~i', $host)) {
             $host = 'https://' . $host;
@@ -428,7 +438,8 @@ class Notifier
         $statusCode = $response->getStatusCode();
 
         if ($statusCode === 401) {
-            $notice['error'] = 'Airbrake: unauthorized - check projectId and projectKey';
+            $notice['error'] = __d('airbrake', 'Airbrake: unauthorized - check projectId and projectKey');
+
             return $notice;
         }
 
@@ -437,7 +448,8 @@ class Notifier
             if (!empty($delay)) {
                 $this->rateLimitReset = time() + (int)$delay[0];
             }
-            $notice['error'] = 'Airbrake: IP is rate limited';
+            $notice['error'] = __d('airbrake', 'Airbrake: IP is rate limited');
+
             return $notice;
         }
 
@@ -448,15 +460,22 @@ class Notifier
             if (isset($body['url'])) {
                 $notice['url'] = $body['url'];
             }
+
             return $notice;
         }
 
         if (isset($body['message'])) {
-            $notice['error'] = 'Airbrake: ' . $body['message'];
+            $notice['error'] = __d('airbrake', 'Airbrake: {0}', $body['message']);
+
             return $notice;
         }
 
-        $notice['error'] = 'Airbrake: unexpected response - ' . (string)$response->getBody();
+        $notice['error'] = __d(
+            'airbrake',
+            'Airbrake: unexpected response - {0}',
+            (string)$response->getBody(),
+        );
+
         return $notice;
     }
 

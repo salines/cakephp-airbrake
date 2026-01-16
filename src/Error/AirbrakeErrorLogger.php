@@ -7,6 +7,8 @@ use Airbrake\Notifier;
 use Cake\Core\Configure;
 use Cake\Error\ErrorLoggerInterface;
 use Cake\Error\PhpError;
+use ErrorException;
+use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 
@@ -61,7 +63,7 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
 
             try {
                 $this->notifier = new Notifier($this->config);
-            } catch (\InvalidArgumentException $e) {
+            } catch (InvalidArgumentException $e) {
                 return null;
             }
         }
@@ -90,7 +92,7 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
     public function logError(
         PhpError $error,
         ?ServerRequestInterface $request = null,
-        bool $includeTrace = false
+        bool $includeTrace = false,
     ): void {
         $notifier = $this->getNotifier();
         if ($notifier === null) {
@@ -98,12 +100,12 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
         }
 
         // Create an ErrorException to get proper backtrace
-        $exception = new \ErrorException(
+        $exception = new ErrorException(
             $error->getMessage(),
             0,
             $error->getCode(),
             $error->getFile(),
-            $error->getLine()
+            $error->getLine(),
         );
 
         $notice = $notifier->buildNotice($exception);
@@ -133,7 +135,7 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
     public function logException(
         Throwable $exception,
         ?ServerRequestInterface $request = null,
-        bool $includeTrace = false
+        bool $includeTrace = false,
     ): void {
         $notifier = $this->getNotifier();
         if ($notifier === null) {
@@ -208,7 +210,7 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
             $notice['params'] ?? [],
             [
                 'query' => $request->getQueryParams(),
-            ]
+            ],
         );
 
         // Add environment variables (server params subset)
@@ -219,20 +221,19 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
                 'REQUEST_URI' => $serverParams['REQUEST_URI'] ?? null,
                 'SERVER_NAME' => $serverParams['SERVER_NAME'] ?? null,
                 'HTTP_HOST' => $serverParams['HTTP_HOST'] ?? null,
-            ])
+            ]),
         );
 
         // Add session data if available
         $session = $request->getAttribute('session');
-        if ($session !== null && method_exists($session, 'id')) {
+        if (is_object($session) && method_exists($session, 'id')) {
             $notice['session'] = [
                 'id' => $session->id(),
             ];
         }
-
         // Add user context if available (CakePHP Authentication plugin)
         $identity = $request->getAttribute('identity');
-        if ($identity !== null) {
+        if (is_object($identity)) {
             $userData = [
                 'id' => method_exists($identity, 'getIdentifier') ? $identity->getIdentifier() : null,
             ];

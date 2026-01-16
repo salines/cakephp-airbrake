@@ -1,0 +1,26 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr\n"
+
+msgid "Airbrake: projectId and projectKey are required configuration options."
+msgstr "Airbrake : projectId et projectKey sont des options de configuration requises."
+
+msgid "Airbrake: notifications are disabled"
+msgstr "Airbrake : les notifications sont désactivées"
+
+msgid "Airbrake: IP is rate limited"
+msgstr "Airbrake : l’IP est soumise à une limitation de débit"
+
+msgid "Airbrake: notice was filtered"
+msgstr "Airbrake : la notification a été filtrée"
+
+msgid "Airbrake: {0}"
+msgstr "Airbrake : {0}"
+
+msgid "Airbrake: unauthorized - check projectId and projectKey"
+msgstr "Airbrake : non autorisé — vérifiez projectId et projectKey"
+
+msgid "Airbrake: unexpected response - {0}"
+msgstr "Airbrake : réponse inattendue — {0}"

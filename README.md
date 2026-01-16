@@ -4,13 +4,14 @@
 [![CakePHP 5.x](https://img.shields.io/badge/CakePHP-5.x-red.svg)](https://cakephp.org)
 [![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
 
-A native CakePHP 5.x plugin for [Airbrake](https://airbrake.io/) error tracking and exception monitoring. Automatically captures and reports exceptions, PHP errors, and log messages to Airbrake using API v3.
+A native CakePHP 5.x plugin for [Airbrake](https://airbrake.io/) error tracking and exception monitoring. Automatically captures and reports exceptions, PHP errors, and log messages to Airbrake using API v3. This plugin does not depend on the legacy phpairbrake SDK.
 
 **No external dependencies** - uses CakePHP's built-in HTTP client.
 
 ## Features
 
 - Native implementation using Airbrake API v3
+- No phpairbrake SDK dependency
 - Automatic exception and error tracking
 - Seamless integration with CakePHP's error handling system
 - Log engine for sending log messages to Airbrake
@@ -35,6 +36,10 @@ Install the plugin using Composer:
 ```bash
 composer require salines/cakephp-airbrake
 ```
+
+## Migration from phpairbrake
+
+If your application previously used the phpairbrake SDK, you can remove it from `composer.json` and keep the same Airbrake credentials. This plugin provides its own notifier (`Airbrake\Notifier`) and sends notices directly using CakePHP's HTTP client.
 
 ## Configuration
 
@@ -204,6 +209,33 @@ $notice = $notifier->buildNotice($exception);
 $notice['context']['severity'] = 'critical'; // debug, info, notice, warning, error, critical
 $notifier->sendNotice($notice);
 ```
+
+### Testing With webhook.site
+
+You can test delivery without a real Airbrake project by sending notices to a webhook.site URL.
+
+1. Create a new endpoint at https://webhook.site and copy the unique URL.
+2. Configure a custom notices URL:
+
+```php
+'Airbrake' => [
+    'projectId' => 1,
+    'projectKey' => 'test-key',
+    'customNoticesUrl' => 'https://webhook.site/your-unique-id',
+],
+```
+
+3. Trigger a test notice:
+
+```php
+use Airbrake\Notifier;
+use Cake\Core\Configure;
+
+$notifier = new Notifier(Configure::read('Airbrake'));
+$notifier->notify(new \RuntimeException('Webhook test notice'));
+```
+
+Open the webhook.site page to inspect the JSON payload.
 
 ## Configuration Options
 

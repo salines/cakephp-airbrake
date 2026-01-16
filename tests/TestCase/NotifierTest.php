@@ -4,8 +4,11 @@ declare(strict_types=1);
 namespace Airbrake\Test\TestCase;
 
 use Airbrake\Notifier;
+use Exception;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use RuntimeException;
 
 /**
  * Notifier Test Case
@@ -19,7 +22,7 @@ class NotifierTest extends TestCase
      */
     public function testConstructorThrowsWithoutConfig(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('projectId and projectKey are required');
 
         new Notifier([]);
@@ -32,7 +35,7 @@ class NotifierTest extends TestCase
      */
     public function testConstructorThrowsWithMissingProjectKey(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new Notifier(['projectId' => 12345]);
     }
@@ -44,7 +47,7 @@ class NotifierTest extends TestCase
      */
     public function testConstructorThrowsWithMissingProjectId(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         new Notifier(['projectKey' => 'test-key']);
     }
@@ -79,7 +82,6 @@ class NotifierTest extends TestCase
 
         $config = $notifier->getConfig();
 
-        $this->assertIsArray($config);
         $this->assertSame(12345, $config['projectId']);
         $this->assertSame('test-key', $config['projectKey']);
         $this->assertSame('testing', $config['environment']);
@@ -132,10 +134,9 @@ class NotifierTest extends TestCase
             'environment' => 'testing',
         ]);
 
-        $exception = new \Exception('Test error message');
+        $exception = new Exception('Test error message');
         $notice = $notifier->buildNotice($exception);
 
-        $this->assertIsArray($notice);
         $this->assertArrayHasKey('errors', $notice);
         $this->assertArrayHasKey('context', $notice);
         $this->assertArrayHasKey('environment', $notice);
@@ -155,7 +156,7 @@ class NotifierTest extends TestCase
             'projectKey' => 'test-key',
         ]);
 
-        $exception = new \RuntimeException('Test runtime error');
+        $exception = new RuntimeException('Test runtime error');
         $notice = $notifier->buildNotice($exception);
 
         $this->assertCount(1, $notice['errors']);
@@ -176,8 +177,8 @@ class NotifierTest extends TestCase
             'projectKey' => 'test-key',
         ]);
 
-        $previous = new \InvalidArgumentException('Previous error');
-        $exception = new \RuntimeException('Main error', 0, $previous);
+        $previous = new InvalidArgumentException('Previous error');
+        $exception = new RuntimeException('Main error', 0, $previous);
         $notice = $notifier->buildNotice($exception);
 
         $this->assertCount(2, $notice['errors']);
@@ -199,7 +200,7 @@ class NotifierTest extends TestCase
             'appVersion' => '1.0.0',
         ]);
 
-        $notice = $notifier->buildNotice(new \Exception('Test'));
+        $notice = $notifier->buildNotice(new Exception('Test'));
 
         $this->assertSame('testing', $notice['context']['environment']);
         $this->assertSame('1.0.0', $notice['context']['version']);
@@ -221,6 +222,7 @@ class NotifierTest extends TestCase
 
         $result = $notifier->addFilter(function ($notice) {
             $notice['context']['custom'] = 'value';
+
             return $notice;
         });
 
@@ -297,7 +299,7 @@ class NotifierTest extends TestCase
             'enabled' => false,
         ]);
 
-        $notice = $notifier->buildNotice(new \Exception('Test'));
+        $notice = $notifier->buildNotice(new Exception('Test'));
         $result = $notifier->sendNotice($notice);
 
         $this->assertArrayHasKey('error', $result);

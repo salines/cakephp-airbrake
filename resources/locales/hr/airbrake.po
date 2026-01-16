@@ -1,0 +1,26 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hr\n"
+
+msgid "Airbrake: projectId and projectKey are required configuration options."
+msgstr "Airbrake: projectId i projectKey su obavezne konfiguracijske opcije."
+
+msgid "Airbrake: notifications are disabled"
+msgstr "Airbrake: obavijesti su onemogucene"
+
+msgid "Airbrake: IP is rate limited"
+msgstr "Airbrake: IP je ogranicen limitom zahtjeva"
+
+msgid "Airbrake: notice was filtered"
+msgstr "Airbrake: obavijest je filtrirana"
+
+msgid "Airbrake: {0}"
+msgstr "Airbrake: {0}"
+
+msgid "Airbrake: unauthorized - check projectId and projectKey"
+msgstr "Airbrake: neautorizirano - provjerite projectId i projectKey"
+
+msgid "Airbrake: unexpected response - {0}"
+msgstr "Airbrake: neocekivan odgovor - {0}"

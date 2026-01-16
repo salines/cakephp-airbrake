@@ -1,0 +1,26 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: uk\n"
+
+msgid "Airbrake: projectId and projectKey are required configuration options."
+msgstr "Airbrake: projectId та projectKey є обов'язковими параметрами конфігурації."
+
+msgid "Airbrake: notifications are disabled"
+msgstr "Airbrake: сповіщення вимкнені"
+
+msgid "Airbrake: IP is rate limited"
+msgstr "Airbrake: для IP діє обмеження швидкості"
+
+msgid "Airbrake: notice was filtered"
+msgstr "Airbrake: повідомлення було відфільтровано"
+
+msgid "Airbrake: {0}"
+msgstr "Airbrake: {0}"
+
+msgid "Airbrake: unauthorized - check projectId and projectKey"
+msgstr "Airbrake: неавторизовано — перевірте projectId і projectKey"
+
+msgid "Airbrake: unexpected response - {0}"
+msgstr "Airbrake: неочікувана відповідь — {0}"

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Airbrake\Test\TestCase\Log\Engine;
 
 use Airbrake\Log\Engine\AirbrakeLog;
+use Airbrake\Notifier;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -168,7 +169,7 @@ class AirbrakeLogTest extends TestCase
 
         $notifier = $method->invoke($log);
 
-        $this->assertInstanceOf(\Airbrake\Notifier::class, $notifier);
+        $this->assertInstanceOf(Notifier::class, $notifier);
     }
 
     /**

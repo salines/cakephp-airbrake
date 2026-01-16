@@ -6,7 +6,10 @@ namespace Airbrake\Log\Engine;
 use Airbrake\Notifier;
 use Cake\Core\Configure;
 use Cake\Log\Engine\BaseLog;
+use Exception;
+use InvalidArgumentException;
 use Stringable;
+use Throwable;
 
 /**
  * Airbrake Log Engine
@@ -63,7 +66,7 @@ class AirbrakeLog extends BaseLog
 
             try {
                 $this->notifier = new Notifier($config);
-            } catch (\InvalidArgumentException $e) {
+            } catch (InvalidArgumentException $e) {
                 return null;
             }
         }
@@ -86,8 +89,7 @@ class AirbrakeLog extends BaseLog
      *
      * @param mixed $level The severity level of the message.
      * @param \Stringable|string $message The message to be logged.
-     * @param array $context Context data for the log message.
-     * @return void
+     * @param array<string, mixed> $context Context data for the log message.
      */
     public function log(mixed $level, Stringable|string $message, array $context = []): void
     {
@@ -99,12 +101,12 @@ class AirbrakeLog extends BaseLog
         $message = $this->interpolate($message, $context);
 
         // Check if there's an exception in context
-        if (isset($context['exception']) && $context['exception'] instanceof \Throwable) {
+        if (isset($context['exception']) && $context['exception'] instanceof Throwable) {
             $notice = $notifier->buildNotice($context['exception']);
             unset($context['exception']);
         } else {
             // Create an exception to capture the stack trace
-            $exception = new \Exception((string)$message);
+            $exception = new Exception((string)$message);
             $notice = $notifier->buildNotice($exception);
         }
 
@@ -132,10 +134,9 @@ class AirbrakeLog extends BaseLog
      * Interpolate placeholders in the message.
      *
      * @param \Stringable|string $message The message with placeholders.
-     * @param array $context The context data.
-     * @return string
+     * @param array<string, mixed> $context The context data.
      */
-    protected function interpolate(Stringable|string $message, array $context): string
+    protected function interpolate(Stringable|string $message, array $context = []): string
     {
         $message = (string)$message;
 

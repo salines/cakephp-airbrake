@@ -1,0 +1,26 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+
+msgid "Airbrake: projectId and projectKey are required configuration options."
+msgstr "Airbrake：projectId 和 projectKey 是必需的配置项。"
+
+msgid "Airbrake: notifications are disabled"
+msgstr "Airbrake：通知已禁用"
+
+msgid "Airbrake: IP is rate limited"
+msgstr "Airbrake：IP 被限速"
+
+msgid "Airbrake: notice was filtered"
+msgstr "Airbrake：通知已被过滤"
+
+msgid "Airbrake: {0}"
+msgstr "Airbrake：{0}"
+
+msgid "Airbrake: unauthorized - check projectId and projectKey"
+msgstr "Airbrake：未授权，请检查 projectId 和 projectKey"
+
+msgid "Airbrake: unexpected response - {0}"
+msgstr "Airbrake：意外响应 - {0}"

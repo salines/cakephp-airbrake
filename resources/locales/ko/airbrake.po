@@ -1,0 +1,26 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko\n"
+
+msgid "Airbrake: projectId and projectKey are required configuration options."
+msgstr "Airbrake: projectId와 projectKey는 필수 구성 옵션입니다."
+
+msgid "Airbrake: notifications are disabled"
+msgstr "Airbrake: 알림이 비활성화되었습니다"
+
+msgid "Airbrake: IP is rate limited"
+msgstr "Airbrake: IP가 속도 제한에 걸렸습니다"
+
+msgid "Airbrake: notice was filtered"
+msgstr "Airbrake: 알림이 필터링되었습니다"
+
+msgid "Airbrake: {0}"
+msgstr "Airbrake: {0}"
+
+msgid "Airbrake: unauthorized - check projectId and projectKey"
+msgstr "Airbrake: 인증되지 않음 - projectId와 projectKey를 확인하세요"
+
+msgid "Airbrake: unexpected response - {0}"
+msgstr "Airbrake: 예상치 못한 응답 - {0}"
