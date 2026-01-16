@@ -13,6 +13,7 @@ use Cake\Core\PluginApplicationInterface;
  * Airbrake Plugin
  *
  * CakePHP 5.x plugin for Airbrake error tracking and exception monitoring.
+ * Native implementation using Airbrake API v3 - no external dependencies required.
  */
 class AirbrakePlugin extends BasePlugin
 {
@@ -73,13 +74,22 @@ class AirbrakePlugin extends BasePlugin
         // Load default configuration if not already set
         if (!Configure::check('Airbrake')) {
             Configure::write('Airbrake', [
-                'projectId' => null,
-                'projectKey' => null,
+                'projectId' => env('AIRBRAKE_PROJECT_ID'),
+                'projectKey' => env('AIRBRAKE_PROJECT_KEY'),
                 'environment' => env('APP_ENV', 'production'),
                 'appVersion' => null,
-                'host' => 'https://api.airbrake.io',
-                'enabled' => true,
-                'keysBlocklist' => ['/password/i', '/secret/i', '/token/i', '/authorization/i'],
+                'host' => env('AIRBRAKE_HOST', 'https://api.airbrake.io'),
+                'enabled' => filter_var(env('AIRBRAKE_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+                'rootDirectory' => defined('ROOT') ? ROOT : null,
+                'keysBlocklist' => [
+                    '/password/i',
+                    '/secret/i',
+                    '/token/i',
+                    '/authorization/i',
+                    '/api_key/i',
+                    '/apikey/i',
+                    '/access_token/i',
+                ],
             ]);
         }
     }
@@ -93,33 +103,15 @@ class AirbrakePlugin extends BasePlugin
     public function services(ContainerInterface $container): void
     {
         // Register the Airbrake Notifier as a singleton
-        $container->addShared(\Airbrake\Notifier::class, function () {
-            $config = Configure::read('Airbrake');
+        $container->addShared(Notifier::class, function () {
+            $config = Configure::read('Airbrake') ?? [];
 
-            if (empty($config['projectId']) || empty($config['projectKey'])) {
-                throw new \RuntimeException(
-                    'Airbrake projectId and projectKey are required. ' .
-                    'Please configure them in config/app.php under the "Airbrake" key.'
-                );
-            }
-
-            $notifier = new \Airbrake\Notifier([
-                'projectId' => $config['projectId'],
-                'projectKey' => $config['projectKey'],
-                'environment' => $config['environment'] ?? 'production',
-                'appVersion' => $config['appVersion'] ?? null,
-                'host' => $config['host'] ?? 'https://api.airbrake.io',
-                'keysBlocklist' => $config['keysBlocklist'] ?? [],
-            ]);
-
-            return $notifier;
+            return new Notifier($config);
         });
 
         // Register the error logger
-        $container->addShared(AirbrakeErrorLogger::class, function () use ($container) {
-            return new AirbrakeErrorLogger(
-                Configure::read('Airbrake')
-            );
+        $container->addShared(AirbrakeErrorLogger::class, function () {
+            return new AirbrakeErrorLogger();
         });
     }
 }

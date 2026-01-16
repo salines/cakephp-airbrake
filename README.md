@@ -4,19 +4,23 @@
 [![CakePHP 5.x](https://img.shields.io/badge/CakePHP-5.x-red.svg)](https://cakephp.org)
 [![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
 
-A CakePHP 5.x plugin for [Airbrake](https://airbrake.io/) error tracking and exception monitoring. Automatically captures and reports exceptions, PHP errors, and log messages to Airbrake.
+A native CakePHP 5.x plugin for [Airbrake](https://airbrake.io/) error tracking and exception monitoring. Automatically captures and reports exceptions, PHP errors, and log messages to Airbrake using API v3.
+
+**No external dependencies** - uses CakePHP's built-in HTTP client.
 
 ## Features
 
+- Native implementation using Airbrake API v3
 - Automatic exception and error tracking
 - Seamless integration with CakePHP's error handling system
 - Log engine for sending log messages to Airbrake
-- Monolog handler for Monolog integration
 - Request context (URL, HTTP method, route, user agent, etc.)
+- CakePHP route information (controller, action, prefix)
 - User identification support (CakePHP Authentication plugin)
 - Sensitive data filtering (passwords, tokens, etc.)
 - Support for self-hosted Airbrake (Errbit)
 - Environment-based configuration
+- Zero external dependencies
 
 ## Requirements
 
@@ -65,11 +69,13 @@ Add the Airbrake configuration to your `config/app.php`:
     'appVersion' => '1.0.0',
     'host' => 'https://api.airbrake.io', // Change for self-hosted
     'enabled' => true,
+    'rootDirectory' => ROOT,
     'keysBlocklist' => [
         '/password/i',
         '/secret/i',
         '/token/i',
         '/authorization/i',
+        '/api_key/i',
     ],
 ],
 ```
@@ -97,13 +103,12 @@ To send log messages to Airbrake, add the log engine configuration:
 'Log' => [
     'airbrake' => [
         'className' => 'Airbrake.Airbrake',
-        'projectId' => env('AIRBRAKE_PROJECT_ID'),
-        'projectKey' => env('AIRBRAKE_PROJECT_KEY'),
-        'environment' => env('APP_ENV', 'production'),
         'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
     ],
 ],
 ```
+
+The log engine automatically uses the global `Airbrake` configuration.
 
 ## Environment Variables
 
@@ -148,21 +153,12 @@ use Cake\Log\Log;
 
 Log::error('Something went wrong', ['scope' => 'airbrake']);
 Log::critical('Database connection failed');
-```
 
-### Monolog Integration
-
-If you're using Monolog, you can use the provided handler:
-
-```php
-use Monolog\Logger;
-use Airbrake\Log\Engine\MonologHandler;
-
-$log = new Logger('app');
-$log->pushHandler(new MonologHandler());
-
-$log->error('Something went wrong', ['user_id' => 123]);
-$log->critical('Database connection failed', ['exception' => $e]);
+// With exception context
+Log::error('Operation failed', [
+    'exception' => $e,
+    'user_id' => 123,
+]);
 ```
 
 ### Adding Custom Context
@@ -180,6 +176,22 @@ $notifier->addFilter(function ($notice) {
     $notice['params']['orderId'] = 12345;
     return $notice;
 });
+
+$notifier->notify($exception);
+```
+
+### Filtering Notices
+
+You can prevent certain notices from being sent by returning `null` from a filter:
+
+```php
+$notifier->addFilter(function ($notice) {
+    // Don't send 404 errors
+    if (str_contains($notice['errors'][0]['type'], 'NotFoundException')) {
+        return null;
+    }
+    return $notice;
+});
 ```
 
 ### Setting Severity
@@ -189,7 +201,7 @@ You can set the severity level for notices:
 ```php
 $notifier = new Notifier(Configure::read('Airbrake'));
 $notice = $notifier->buildNotice($exception);
-$notice['context']['severity'] = 'critical'; // debug, info, notice, warning, error, critical, alert, emergency
+$notice['context']['severity'] = 'critical'; // debug, info, notice, warning, error, critical
 $notifier->sendNotice($notice);
 ```
 
@@ -205,6 +217,7 @@ $notifier->sendNotice($notice);
 | `enabled` | bool | true | Enable/disable Airbrake reporting |
 | `keysBlocklist` | array | [...] | Regex patterns for sensitive keys to filter |
 | `rootDirectory` | string | ROOT | Root directory for backtrace filtering |
+| `httpClientOptions` | array | ['timeout' => 10] | Options for CakePHP HTTP Client |
 
 ## Self-Hosted Airbrake (Errbit)
 
@@ -227,6 +240,9 @@ The plugin automatically filters sensitive data based on the `keysBlocklist` con
 - `/secret/i`
 - `/token/i`
 - `/authorization/i`
+- `/api_key/i`
+- `/apikey/i`
+- `/access_token/i`
 
 You can add your own patterns:
 
@@ -236,6 +252,7 @@ You can add your own patterns:
     '/secret/i',
     '/credit_card/i',
     '/ssn/i',
+    '/cvv/i',
 ],
 ```
 
@@ -256,12 +273,44 @@ Or using environment variables:
 AIRBRAKE_ENABLED=false
 ```
 
+## Notice Structure
+
+The plugin sends notices to Airbrake in the following structure (API v3):
+
+```json
+{
+  "errors": [{
+    "type": "RuntimeException",
+    "message": "Something went wrong",
+    "backtrace": [...]
+  }],
+  "context": {
+    "notifier": {"name": "cakephp-airbrake", "version": "1.0.0"},
+    "environment": "production",
+    "hostname": "server-01",
+    "os": "Linux",
+    "language": "PHP 8.1.0",
+    "severity": "error",
+    "url": "https://example.com/users/123",
+    "httpMethod": "GET",
+    "route": "/Users/view",
+    "component": "Users",
+    "action": "view",
+    "user": {"id": 1, "name": "John", "email": "john@example.com"}
+  },
+  "environment": {...},
+  "params": {...},
+  "session": {...}
+}
+```
+
 ## Testing
 
 Run the tests:
 
 ```bash
-composer test
+composer install
+./vendor/bin/phpunit
 ```
 
 ## Contributing
@@ -281,5 +330,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Credits
 
 - [Airbrake](https://airbrake.io/) - Error monitoring service
-- [PHPBrake](https://github.com/airbrake/phpbrake) - Official Airbrake PHP library
 - [CakePHP](https://cakephp.org/) - PHP framework

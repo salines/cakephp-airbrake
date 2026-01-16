@@ -110,64 +110,6 @@ class AirbrakeLogTest extends TestCase
     }
 
     /**
-     * Test context filtering.
-     *
-     * @return void
-     */
-    public function testFilterContext(): void
-    {
-        $log = new AirbrakeLog([
-            'keysBlocklist' => ['/password/i', '/secret/i'],
-        ]);
-
-        $reflection = new ReflectionClass($log);
-        $method = $reflection->getMethod('filterContext');
-        $method->setAccessible(true);
-
-        $context = [
-            'username' => 'john',
-            'password' => 'secret123',
-            'secret_key' => 'abc123',
-            'email' => 'john@example.com',
-        ];
-
-        $result = $method->invoke($log, $context);
-
-        $this->assertSame('john', $result['username']);
-        $this->assertSame('[FILTERED]', $result['password']);
-        $this->assertSame('[FILTERED]', $result['secret_key']);
-        $this->assertSame('john@example.com', $result['email']);
-    }
-
-    /**
-     * Test nested context filtering.
-     *
-     * @return void
-     */
-    public function testFilterContextNested(): void
-    {
-        $log = new AirbrakeLog([
-            'keysBlocklist' => ['/password/i'],
-        ]);
-
-        $reflection = new ReflectionClass($log);
-        $method = $reflection->getMethod('filterContext');
-        $method->setAccessible(true);
-
-        $context = [
-            'user' => [
-                'name' => 'john',
-                'password' => 'secret123',
-            ],
-        ];
-
-        $result = $method->invoke($log, $context);
-
-        $this->assertSame('john', $result['user']['name']);
-        $this->assertSame('[FILTERED]', $result['user']['password']);
-    }
-
-    /**
      * Test that notifier returns null when disabled.
      *
      * @return void
@@ -205,6 +147,28 @@ class AirbrakeLogTest extends TestCase
         $method->setAccessible(true);
 
         $this->assertNull($method->invoke($log));
+    }
+
+    /**
+     * Test that notifier is created with valid credentials.
+     *
+     * @return void
+     */
+    public function testGetNotifierCreatesNotifierWithValidCredentials(): void
+    {
+        $log = new AirbrakeLog([
+            'enabled' => true,
+            'projectId' => 12345,
+            'projectKey' => 'test-key',
+        ]);
+
+        $reflection = new ReflectionClass($log);
+        $method = $reflection->getMethod('getNotifier');
+        $method->setAccessible(true);
+
+        $notifier = $method->invoke($log);
+
+        $this->assertInstanceOf(\Airbrake\Notifier::class, $notifier);
     }
 
     /**

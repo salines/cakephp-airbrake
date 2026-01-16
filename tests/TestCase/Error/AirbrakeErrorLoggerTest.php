@@ -4,8 +4,6 @@ declare(strict_types=1);
 namespace Airbrake\Test\TestCase\Error;
 
 use Airbrake\Error\AirbrakeErrorLogger;
-use Airbrake\Notifier;
-use Cake\Error\PhpError;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -99,7 +97,7 @@ class AirbrakeErrorLoggerTest extends TestCase
         $this->assertSame('E_WARNING', $method->invoke($logger, E_WARNING));
         $this->assertSame('E_NOTICE', $method->invoke($logger, E_NOTICE));
         $this->assertSame('E_DEPRECATED', $method->invoke($logger, E_DEPRECATED));
-        $this->assertSame('UNKNOWN', $method->invoke($logger, 99999));
+        $this->assertSame('E_UNKNOWN', $method->invoke($logger, 99999));
     }
 
     /**
@@ -123,24 +121,45 @@ class AirbrakeErrorLoggerTest extends TestCase
     }
 
     /**
-     * Test default configuration values.
+     * Test that notifier returns null when disabled.
      *
      * @return void
      */
-    public function testDefaultConfiguration(): void
+    public function testGetNotifierReturnsNullWhenDisabled(): void
     {
-        $logger = new AirbrakeErrorLogger([]);
+        $logger = new AirbrakeErrorLogger([
+            'enabled' => false,
+            'projectId' => 12345,
+            'projectKey' => 'test-key',
+        ]);
 
         $reflection = new ReflectionClass($logger);
-        $property = $reflection->getProperty('config');
-        $property->setAccessible(true);
+        $method = $reflection->getMethod('getNotifier');
+        $method->setAccessible(true);
 
-        $config = $property->getValue($logger);
+        $this->assertNull($method->invoke($logger));
+    }
 
-        $this->assertSame('production', $config['environment']);
-        $this->assertSame('https://api.airbrake.io', $config['host']);
-        $this->assertTrue($config['enabled']);
-        $this->assertIsArray($config['keysBlocklist']);
+    /**
+     * Test that notifier is created with valid credentials.
+     *
+     * @return void
+     */
+    public function testGetNotifierCreatesNotifierWithValidCredentials(): void
+    {
+        $logger = new AirbrakeErrorLogger([
+            'enabled' => true,
+            'projectId' => 12345,
+            'projectKey' => 'test-key',
+        ]);
+
+        $reflection = new ReflectionClass($logger);
+        $method = $reflection->getMethod('getNotifier');
+        $method->setAccessible(true);
+
+        $notifier = $method->invoke($logger);
+
+        $this->assertInstanceOf(\Airbrake\Notifier::class, $notifier);
     }
 
     /**
@@ -151,6 +170,8 @@ class AirbrakeErrorLoggerTest extends TestCase
     public function testConfigurationOverride(): void
     {
         $logger = new AirbrakeErrorLogger([
+            'projectId' => 12345,
+            'projectKey' => 'test-key',
             'environment' => 'staging',
             'host' => 'https://custom.airbrake.io',
             'appVersion' => '2.0.0',

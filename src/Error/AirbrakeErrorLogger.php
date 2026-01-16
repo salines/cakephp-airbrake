@@ -38,18 +38,9 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
      */
     public function __construct(array $config = [])
     {
-        $defaultConfig = [
-            'projectId' => null,
-            'projectKey' => null,
-            'environment' => 'production',
-            'appVersion' => null,
-            'host' => 'https://api.airbrake.io',
-            'enabled' => true,
-            'keysBlocklist' => ['/password/i', '/secret/i', '/token/i', '/authorization/i'],
-            'rootDirectory' => ROOT ?? null,
-        ];
-
-        $this->config = array_merge($defaultConfig, $config);
+        // Merge with Airbrake config from app configuration
+        $appConfig = Configure::read('Airbrake') ?? [];
+        $this->config = array_merge($appConfig, $config);
     }
 
     /**
@@ -68,21 +59,11 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
                 return null;
             }
 
-            $this->notifier = new Notifier([
-                'projectId' => $this->config['projectId'],
-                'projectKey' => $this->config['projectKey'],
-                'environment' => $this->config['environment'],
-                'appVersion' => $this->config['appVersion'],
-                'host' => $this->config['host'],
-                'keysBlocklist' => $this->config['keysBlocklist'],
-                'rootDirectory' => $this->config['rootDirectory'],
-            ]);
-
-            // Add filter to include request context
-            $this->notifier->addFilter(function ($notice) {
-                $notice['context']['component'] = 'cakephp';
-                return $notice;
-            });
+            try {
+                $this->notifier = new Notifier($this->config);
+            } catch (\InvalidArgumentException $e) {
+                return null;
+            }
         }
 
         return $this->notifier;
@@ -116,9 +97,7 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
             return;
         }
 
-        $severity = $this->mapErrorLevelToSeverity($error->getCode());
-
-        // Create an exception-like structure for Airbrake
+        // Create an ErrorException to get proper backtrace
         $exception = new \ErrorException(
             $error->getMessage(),
             0,
@@ -129,11 +108,13 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
 
         $notice = $notifier->buildNotice($exception);
 
-        // Add additional context
-        $notice['context']['severity'] = $severity;
-        $notice['context']['errorLevel'] = $this->getErrorLevelName($error->getCode());
+        // Override error type with PHP error type name
+        $notice['errors'][0]['type'] = $this->getErrorLevelName($error->getCode());
 
-        // Add request data if available
+        // Set severity based on error level
+        $notice['context']['severity'] = $this->mapErrorLevelToSeverity($error->getCode());
+
+        // Add request context if available
         if ($request !== null) {
             $notice = $this->addRequestContext($notice, $request);
         }
@@ -161,7 +142,7 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
 
         $notice = $notifier->buildNotice($exception);
 
-        // Add request data if available
+        // Add request context if available
         if ($request !== null) {
             $notice = $this->addRequestContext($notice, $request);
         }
@@ -172,9 +153,9 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
     /**
      * Add request context to the notice.
      *
-     * @param array $notice The Airbrake notice.
+     * @param array<string, mixed> $notice The Airbrake notice.
      * @param \Psr\Http\Message\ServerRequestInterface $request The request instance.
-     * @return array
+     * @return array<string, mixed>
      */
     protected function addRequestContext(array $notice, ServerRequestInterface $request): array
     {
@@ -212,12 +193,17 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
         }
 
         // Add user IP address
-        $clientIp = $request->clientIp ?? $request->getServerParams()['REMOTE_ADDR'] ?? null;
+        $serverParams = $request->getServerParams();
+        $clientIp = $serverParams['HTTP_X_FORWARDED_FOR'] ?? $serverParams['REMOTE_ADDR'] ?? null;
         if ($clientIp) {
+            if (str_contains($clientIp, ',')) {
+                $ips = explode(',', $clientIp);
+                $clientIp = trim(array_pop($ips));
+            }
             $notice['context']['userAddr'] = $clientIp;
         }
 
-        // Add request parameters (filtered)
+        // Add request parameters
         $notice['params'] = array_merge(
             $notice['params'] ?? [],
             [
@@ -226,7 +212,6 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
         );
 
         // Add environment variables (server params subset)
-        $serverParams = $request->getServerParams();
         $notice['environment'] = array_merge(
             $notice['environment'] ?? [],
             array_filter([
@@ -239,19 +224,17 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
 
         // Add session data if available
         $session = $request->getAttribute('session');
-        if ($session !== null && method_exists($session, 'read')) {
-            $sessionData = [];
-            if (method_exists($session, 'id')) {
-                $sessionData['id'] = $session->id();
-            }
-            $notice['session'] = $sessionData;
+        if ($session !== null && method_exists($session, 'id')) {
+            $notice['session'] = [
+                'id' => $session->id(),
+            ];
         }
 
         // Add user context if available (CakePHP Authentication plugin)
         $identity = $request->getAttribute('identity');
         if ($identity !== null) {
             $userData = [
-                'id' => $identity->getIdentifier() ?? null,
+                'id' => method_exists($identity, 'getIdentifier') ? $identity->getIdentifier() : null,
             ];
 
             // Try to get additional user info if available
@@ -282,10 +265,9 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
     {
         return match ($level) {
             E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR => 'error',
-            E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING => 'warning',
+            E_WARNING, E_CORE_WARNING, E_COMPILE_WARNING, E_USER_WARNING, E_DEPRECATED, E_USER_DEPRECATED => 'warning',
             E_NOTICE, E_USER_NOTICE => 'notice',
             E_STRICT => 'info',
-            E_DEPRECATED, E_USER_DEPRECATED => 'warning',
             default => 'error',
         };
     }
@@ -314,7 +296,7 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
             E_RECOVERABLE_ERROR => 'E_RECOVERABLE_ERROR',
             E_DEPRECATED => 'E_DEPRECATED',
             E_USER_DEPRECATED => 'E_USER_DEPRECATED',
-            default => 'UNKNOWN',
+            default => 'E_UNKNOWN',
         };
     }
 }

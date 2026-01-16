@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Airbrake\Log\Engine;
 
 use Airbrake\Notifier;
+use Cake\Core\Configure;
 use Cake\Log\Engine\BaseLog;
 use Stringable;
 
@@ -52,27 +53,19 @@ class AirbrakeLog extends BaseLog
         }
 
         if ($this->notifier === null) {
-            $config = $this->getConfig();
+            // Merge with global Airbrake config
+            $globalConfig = Configure::read('Airbrake') ?? [];
+            $config = array_merge($globalConfig, $this->getConfig());
 
             if (empty($config['projectId']) || empty($config['projectKey'])) {
                 return null;
             }
 
-            $this->notifier = new Notifier([
-                'projectId' => $config['projectId'],
-                'projectKey' => $config['projectKey'],
-                'environment' => $config['environment'],
-                'appVersion' => $config['appVersion'],
-                'host' => $config['host'],
-                'keysBlocklist' => $config['keysBlocklist'],
-                'rootDirectory' => $config['rootDirectory'] ?? (defined('ROOT') ? ROOT : null),
-            ]);
-
-            // Add filter to mark as log entry
-            $this->notifier->addFilter(function ($notice) {
-                $notice['context']['component'] = 'cakephp-log';
-                return $notice;
-            });
+            try {
+                $this->notifier = new Notifier($config);
+            } catch (\InvalidArgumentException $e) {
+                return null;
+            }
         }
 
         return $this->notifier;
@@ -105,26 +98,31 @@ class AirbrakeLog extends BaseLog
 
         $message = $this->interpolate($message, $context);
 
-        // Create an exception to capture the stack trace
-        $exception = new \Exception((string)$message);
+        // Check if there's an exception in context
+        if (isset($context['exception']) && $context['exception'] instanceof \Throwable) {
+            $notice = $notifier->buildNotice($context['exception']);
+            unset($context['exception']);
+        } else {
+            // Create an exception to capture the stack trace
+            $exception = new \Exception((string)$message);
+            $notice = $notifier->buildNotice($exception);
+        }
 
-        $notice = $notifier->buildNotice($exception);
+        // Set error type as channel.LEVEL format
+        $notice['errors'][0]['type'] = 'cakephp.' . strtoupper((string)$level);
 
         // Set severity based on log level
         $notice['context']['severity'] = $this->mapLevelToSeverity($level);
-        $notice['context']['logLevel'] = $level;
 
         // Add scope information if available
         if (!empty($context['scope'])) {
             $notice['context']['scope'] = $context['scope'];
+            unset($context['scope']);
         }
 
-        // Add any additional context
+        // Add any additional context as params
         if (!empty($context)) {
-            $notice['params'] = array_merge(
-                $notice['params'] ?? [],
-                ['context' => $this->filterContext($context)]
-            );
+            $notice['params']['context'] = $context;
         }
 
         $notifier->sendNotice($notice);
@@ -171,42 +169,5 @@ class AirbrakeLog extends BaseLog
             'debug' => 'debug',
             default => 'error',
         };
-    }
-
-    /**
-     * Filter sensitive keys from context.
-     *
-     * @param array $context The context data.
-     * @return array
-     */
-    protected function filterContext(array $context): array
-    {
-        $filtered = [];
-        $blocklist = $this->getConfig('keysBlocklist', []);
-
-        foreach ($context as $key => $value) {
-            // Skip scope as it's handled separately
-            if ($key === 'scope') {
-                continue;
-            }
-
-            $isBlocked = false;
-            foreach ($blocklist as $pattern) {
-                if (preg_match($pattern, $key)) {
-                    $isBlocked = true;
-                    break;
-                }
-            }
-
-            if ($isBlocked) {
-                $filtered[$key] = '[FILTERED]';
-            } elseif (is_array($value)) {
-                $filtered[$key] = $this->filterContext($value);
-            } else {
-                $filtered[$key] = $value;
-            }
-        }
-
-        return $filtered;
     }
 }
