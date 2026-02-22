@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace CakeAirbrake\Log\Engine;
 
-use CakeAirbrake\Notifier;
 use Cake\Core\Configure;
 use Cake\Log\Engine\BaseLog;
+use CakeAirbrake\Notifier;
 use Exception;
 use InvalidArgumentException;
 use Stringable;
