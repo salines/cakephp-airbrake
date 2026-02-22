@@ -22,7 +22,7 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
     /**
      * Airbrake Notifier instance.
      *
-     * @var \Airbrake\Notifier|null
+     * @var \CakeAirbrake\Notifier|null
      */
     protected ?Notifier $notifier = null;
 
@@ -48,7 +48,7 @@ class AirbrakeErrorLogger implements ErrorLoggerInterface
     /**
      * Get the Airbrake Notifier instance.
      *
-     * @return \Airbrake\Notifier|null
+     * @return \CakeAirbrake\Notifier|null
      */
     protected function getNotifier(): ?Notifier
     {
