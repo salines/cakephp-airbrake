@@ -33,7 +33,7 @@ class AirbrakePluginTest extends TestCase
         $plugin = new CakeAirbrakePlugin();
         $path = $plugin->getPath();
 
-        $this->assertStringEndsWith('cakephp-airbrake' . DIRECTORY_SEPARATOR, $path);
+        $this->assertStringEndsWith('CakeAirbrake' . DIRECTORY_SEPARATOR, $path);
     }
 
     /**
