@@ -1,5 +1,6 @@
 # CakePHP Airbrake Plugin
 
+[![CI](https://github.com/salines/cakephp-airbrake/actions/workflows/ci.yml/badge.svg)](https://github.com/salines/cakephp-airbrake/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CakePHP 5.x](https://img.shields.io/badge/CakePHP-5.x-red.svg)](https://cakephp.org)
 [![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
