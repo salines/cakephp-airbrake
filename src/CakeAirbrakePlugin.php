@@ -18,13 +18,6 @@ use CakeAirbrake\Error\AirbrakeErrorLogger;
 class CakeAirbrakePlugin extends BasePlugin
 {
     /**
-     * Plugin name.
-     *
-     * @var string|null
-     */
-    protected ?string $name = 'Airbrake';
-
-    /**
      * Do bootstrapping or not
      *
      * @var bool

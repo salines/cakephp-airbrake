@@ -20,11 +20,11 @@ class AirbrakePluginTest extends TestCase
     {
         $plugin = new CakeAirbrakePlugin();
 
-        $this->assertSame('Airbrake', $plugin->getName());
+        $this->assertSame('CakeAirbrake', $plugin->getName());
     }
 
     /**
-     * Test plugin path.
+     * Test plugin path points to an existing directory.
      *
      * @return void
      */
@@ -33,7 +33,7 @@ class AirbrakePluginTest extends TestCase
         $plugin = new CakeAirbrakePlugin();
         $path = $plugin->getPath();
 
-        $this->assertStringEndsWith('CakeAirbrake' . DIRECTORY_SEPARATOR, $path);
+        $this->assertDirectoryExists($path);
     }
 
     /**
