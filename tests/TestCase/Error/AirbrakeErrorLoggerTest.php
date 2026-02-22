@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Airbrake\Test\TestCase\Error;
+namespace CakeAirbrake\Test\TestCase\Error;
 
-use Airbrake\Error\AirbrakeErrorLogger;
-use Airbrake\Notifier;
+use CakeAirbrake\Error\AirbrakeErrorLogger;
+use CakeAirbrake\Notifier;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 

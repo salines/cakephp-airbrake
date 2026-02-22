@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Airbrake\Test\TestCase\Log\Engine;
+namespace CakeAirbrake\Test\TestCase\Log\Engine;
 
-use Airbrake\Log\Engine\AirbrakeLog;
-use Airbrake\Notifier;
+use CakeAirbrake\Log\Engine\AirbrakeLog;
+use CakeAirbrake\Notifier;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Airbrake;
+namespace CakeAirbrake;
 
 use Cake\Http\Client;
 use Cake\Http\Client\Response;
