@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Airbrake\Test\TestCase;
+namespace CakeAirbrake\Test\TestCase;
 
-use Airbrake\AirbrakePlugin;
+use CakeAirbrake\CakeAirbrakePlugin;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -18,7 +18,7 @@ class AirbrakePluginTest extends TestCase
      */
     public function testPluginName(): void
     {
-        $plugin = new AirbrakePlugin();
+        $plugin = new CakeAirbrakePlugin();
 
         $this->assertSame('Airbrake', $plugin->getName());
     }
@@ -30,7 +30,7 @@ class AirbrakePluginTest extends TestCase
      */
     public function testPluginPath(): void
     {
-        $plugin = new AirbrakePlugin();
+        $plugin = new CakeAirbrakePlugin();
         $path = $plugin->getPath();
 
         $this->assertStringEndsWith('cakephp-airbrake' . DIRECTORY_SEPARATOR, $path);
@@ -43,7 +43,7 @@ class AirbrakePluginTest extends TestCase
      */
     public function testPluginHooks(): void
     {
-        $plugin = new AirbrakePlugin();
+        $plugin = new CakeAirbrakePlugin();
 
         // Bootstrap should be enabled
         $this->assertTrue($plugin->isEnabled('bootstrap'));

@@ -33,13 +33,16 @@
     },
     "autoload": {
         "psr-4": {
-            "Airbrake\\": "src/"
+            "CakeAirbrake\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Airbrake\\Test\\": "tests/"
+            "CakeAirbrake\\Test\\": "tests/"
         }
+    },
+    "extra": {
+        "installer-name": "CakeAirbrake"
     },
     "config": {
         "sort-packages": true,

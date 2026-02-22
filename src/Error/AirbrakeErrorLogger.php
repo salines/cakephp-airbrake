@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Airbrake\Error;
+namespace CakeAirbrake\Error;
 
-use Airbrake\Notifier;
+use CakeAirbrake\Notifier;
 use Cake\Core\Configure;
 use Cake\Error\ErrorLoggerInterface;
 use Cake\Error\PhpError;

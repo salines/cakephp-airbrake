@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Airbrake\Test\TestCase;
+namespace CakeAirbrake\Test\TestCase;
 
-use Airbrake\Notifier;
+use CakeAirbrake\Notifier;
 use Exception;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;

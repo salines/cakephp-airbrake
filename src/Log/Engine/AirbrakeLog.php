@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Airbrake\Log\Engine;
+namespace CakeAirbrake\Log\Engine;
 
-use Airbrake\Notifier;
+use CakeAirbrake\Notifier;
 use Cake\Core\Configure;
 use Cake\Log\Engine\BaseLog;
 use Exception;

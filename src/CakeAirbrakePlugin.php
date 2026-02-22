@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Airbrake;
+namespace CakeAirbrake;
 
-use Airbrake\Error\AirbrakeErrorLogger;
+use CakeAirbrake\Error\AirbrakeErrorLogger;
 use Cake\Core\BasePlugin;
 use Cake\Core\Configure;
 use Cake\Core\ContainerInterface;
@@ -15,7 +15,7 @@ use Cake\Core\PluginApplicationInterface;
  * CakePHP 5.x plugin for Airbrake error tracking and exception monitoring.
  * Native implementation using Airbrake API v3 - no external dependencies required.
  */
-class AirbrakePlugin extends BasePlugin
+class CakeAirbrakePlugin extends BasePlugin
 {
     /**
      * Plugin name.
