@@ -45,6 +45,12 @@
     "extra": {
         "installer-name": "CakeAirbrake"
     },
+    "scripts": {
+        "test": "phpunit --colors=always",
+        "cs": "phpcs -p",
+        "cbf": "phpcbf -p",
+        "stan": "phpstan analyse --memory-limit=512M"
+    },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
