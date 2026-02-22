@@ -22,7 +22,7 @@ class AirbrakeLog extends BaseLog
     /**
      * Airbrake Notifier instance.
      *
-     * @var \Airbrake\Notifier|null
+     * @var \CakeAirbrake\Notifier|null
      */
     protected ?Notifier $notifier = null;
 
@@ -47,7 +47,7 @@ class AirbrakeLog extends BaseLog
     /**
      * Get the Airbrake Notifier instance.
      *
-     * @return \Airbrake\Notifier|null
+     * @return \CakeAirbrake\Notifier|null
      */
     protected function getNotifier(): ?Notifier
     {
