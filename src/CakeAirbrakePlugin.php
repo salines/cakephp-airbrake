@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace CakeAirbrake;
 
-use CakeAirbrake\Error\AirbrakeErrorLogger;
 use Cake\Core\BasePlugin;
 use Cake\Core\Configure;
 use Cake\Core\ContainerInterface;
 use Cake\Core\PluginApplicationInterface;
+use CakeAirbrake\Error\AirbrakeErrorLogger;
 
 /**
  * Airbrake Plugin

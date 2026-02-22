@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace CakeAirbrake\Error;
 
-use CakeAirbrake\Notifier;
 use Cake\Core\Configure;
 use Cake\Error\ErrorLoggerInterface;
 use Cake\Error\PhpError;
+use CakeAirbrake\Notifier;
 use ErrorException;
 use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface;
