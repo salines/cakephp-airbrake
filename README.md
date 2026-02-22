@@ -39,7 +39,7 @@ composer require salines/cakephp-airbrake
 
 ## Migration from phpairbrake
 
-If your application previously used the phpairbrake SDK, you can remove it from `composer.json` and keep the same Airbrake credentials. This plugin provides its own notifier (`Airbrake\Notifier`) and sends notices directly using CakePHP's HTTP client.
+If your application previously used the phpairbrake SDK, you can remove it from `composer.json` and keep the same Airbrake credentials. This plugin provides its own notifier (`CakeAirbrake\Notifier`) and sends notices directly using CakePHP's HTTP client.
 
 ## Configuration
 
@@ -48,18 +48,14 @@ If your application previously used the phpairbrake SDK, you can remove it from 
 Add the plugin to your `src/Application.php`:
 
 ```php
+use CakeAirbrake\CakeAirbrakePlugin;
+
 public function bootstrap(): void
 {
     parent::bootstrap();
 
-    $this->addPlugin('Airbrake');
+    $this->addPlugin(CakeAirbrakePlugin::class);
 }
-```
-
-Or use the CLI:
-
-```bash
-bin/cake plugin load Airbrake
 ```
 
 ### 2. Configure Airbrake
@@ -96,7 +92,7 @@ To automatically send all exceptions and errors to Airbrake, configure the error
     'skipLog' => [],
     'log' => true,
     'trace' => true,
-    'logger' => \Airbrake\Error\AirbrakeErrorLogger::class,
+    'logger' => \CakeAirbrake\Error\AirbrakeErrorLogger::class,
 ],
 ```
 
@@ -107,7 +103,7 @@ To send log messages to Airbrake, add the log engine configuration:
 ```php
 'Log' => [
     'airbrake' => [
-        'className' => 'Airbrake.Airbrake',
+        'className' => 'CakeAirbrake.Airbrake',
         'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
     ],
 ],
@@ -138,7 +134,7 @@ Once configured with the error logger, all uncaught exceptions and PHP errors wi
 You can manually send exceptions to Airbrake:
 
 ```php
-use Airbrake\Notifier;
+use CakeAirbrake\Notifier;
 use Cake\Core\Configure;
 
 try {
@@ -171,7 +167,7 @@ Log::error('Operation failed', [
 You can add custom context to your error reports using filters:
 
 ```php
-use Airbrake\Notifier;
+use CakeAirbrake\Notifier;
 use Cake\Core\Configure;
 
 $notifier = new Notifier(Configure::read('Airbrake'));
@@ -228,7 +224,7 @@ You can test delivery without a real Airbrake project by sending notices to a we
 3. Trigger a test notice:
 
 ```php
-use Airbrake\Notifier;
+use CakeAirbrake\Notifier;
 use Cake\Core\Configure;
 
 $notifier = new Notifier(Configure::read('Airbrake'));
